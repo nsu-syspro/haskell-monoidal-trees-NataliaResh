@@ -3,7 +3,7 @@
 
 module Task2.Tree where
 
-import Common.MonoidalTree
+import Common.MonoidalTree ( MonoidalTree(..) )
 
 import Task1 (Measured(..))
 
@@ -19,22 +19,31 @@ data Tree m a
 
 -- | Measures given tree using provided measure of 'a'
 instance Measured m a => Measured m (Tree m a) where
-  measure = error "TODO: define measure (Measured m (Task2.Tree m a))"
+  measure Empty          = mempty
+  measure (Leaf x)       = measure x
+  measure (Branch m _ _) = m 
 
 instance Foldable (Tree m) where
-  foldMap = error "TODO: define foldMap (Foldable (Task2.Tree m))"
+  foldMap _ Empty          = mempty
+  foldMap f (Leaf x)       = f x
+  foldMap f (Branch _ l r) = (foldMap . foldMap) f [l, r]
 
 -- * Smart constructors
 
 leaf :: a -> Tree m a
-leaf = error "TODO: define leaf (Task2.Tree)"
+leaf = Leaf
 
 branch :: Measured m a => Tree m a -> Tree m a -> Tree m a
-branch = error "TODO: define branch (Task2.Tree)"
+branch l r = Branch (measure [l, r]) l r
 
 -- * Monoidal tree instance
 
 instance MonoidalTree Tree where
-  toTree = error "TODO: define toTree (MonoidalTree Task2.Tree)"
-  (<|) = error "TODO: define (<|) (MonoidalTree Task2.Tree)"
-  (|>) = error "TODO: define (|>) (MonoidalTree Task2.Tree)"
+  toTree = foldl (|>) Empty
+  x <| Empty        = leaf x
+  x <| Leaf y       = branch (leaf x) (leaf y)
+  x <| Branch _ l r = branch (x <| l) r
+  
+  Empty        |> x = leaf x
+  Leaf y       |> x = branch (leaf y) (leaf x)
+  Branch _ l r |> x = branch l (r |> x)
