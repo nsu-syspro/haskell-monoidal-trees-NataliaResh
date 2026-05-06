@@ -3,10 +3,11 @@
 
 module Task4.PQueue where
 
-import Common.PriorityQueue
+import Common.PriorityQueue ( PriorityQueue(..) )
+import Common.MonoidalTree ( MonoidalTree((|>)) )
 
-import Task1 (Measured(..), MinMax(..))
-import Task4.Tree
+import Task1 ( Measured(..), MinMax(getMinMax) )
+import Task4.Tree ( (><), splitTree, Split(Split), Tree(Empty) )
 
 newtype PQueue k v = PQueue { getTree :: Tree (MinMax k) (Entry k v) }
   deriving (Show, Eq)
@@ -17,14 +18,24 @@ newtype Entry k v = Entry { getEntry :: (k, v) }
 
 -- | Measures given entry using both minimum and maximum priority 'k'
 instance Ord k => Measured (MinMax k) (Entry k v) where
-  measure = error "TODO: define measure (Measured (MinMax k) (Task4.Entry k v))"
+  measure = measure . fst . getEntry
 
 -- * Priority queue instance
 
 instance PriorityQueue PQueue where
-  empty = error "TODO: define empty (PriorityQueue Task4.PQueue)"
-  toPriorityQueue = error "TODO: define toPriorityQueue (PriorityQueue Task4.PQueue)"
-  entries = error "TODO: define entries (PriorityQueue Task4.PQueue)"
-  insert = error "TODO: define insert (PriorityQueue Task4.PQueue)"
-  extractMin = error "TODO: define extractMin (PriorityQueue Task4.PQueue)"
-  extractMax = error "TODO: define extractMax (PriorityQueue Task4.PQueue)"
+  empty = PQueue Empty
+  toPriorityQueue = foldr (\(k, v) pq -> insert k v pq) empty
+  entries = foldMap (\(Entry (k, v)) -> [(k, v)]) . getTree
+  insert k v (PQueue t) = PQueue (t |> Entry (k, v))
+  extractMin (PQueue q) = case splitTree isMin mempty q of
+    Nothing                         -> Nothing
+    Just (Split l (Entry (_, v)) r) -> Just (v, PQueue (l >< r))
+    where
+      minKey = (fst . getMinMax . measure) q
+      isMin mm = fst (getMinMax mm) == minKey
+  extractMax (PQueue q) = case splitTree isMax mempty q of
+    Nothing                         -> Nothing
+    Just (Split l (Entry (_, v)) r) -> Just (v, PQueue (l >< r))
+    where
+      maxKey = (snd . getMinMax . measure) q
+      isMax mm = snd (getMinMax mm) == maxKey 
