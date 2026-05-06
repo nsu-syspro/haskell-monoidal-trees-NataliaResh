@@ -36,7 +36,7 @@ instance Ord k => Measured (MinMax k) (Entry k v) where
 
 instance PriorityQueue PQueue where
   empty = PQueue Empty
-  toPriorityQueue = foldl (\pq (k, v) -> insert k v pq) empty
+  toPriorityQueue = foldr (\(k, v) pq -> insert k v pq) empty
   entries = foldMap (\(Entry (k, v)) -> [(k, v)]) . getTree
   insert k v (PQueue t) = PQueue (t |> Entry (k, v))
   extractMin = extract minKey . getTree

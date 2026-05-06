@@ -36,7 +36,7 @@ instance Foldable Seq where
 instance Sequence Seq where
   empty = Seq Empty
 
-  toSequence = foldl (|+) empty
+  toSequence = foldr (+|) empty
 
   x +| (Seq t) = Seq (Elem x <| t)
 

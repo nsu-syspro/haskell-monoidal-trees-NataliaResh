@@ -39,7 +39,7 @@ branch l r = Branch (measure [l, r]) l r
 -- * Monoidal tree instance
 
 instance MonoidalTree Tree where
-  toTree = foldl (|>) Empty
+  toTree = foldr (<|) Empty
   x <| Empty        = leaf x
   x <| Leaf y       = branch (leaf x) (leaf y)
   x <| Branch _ l r = branch (x <| l) r

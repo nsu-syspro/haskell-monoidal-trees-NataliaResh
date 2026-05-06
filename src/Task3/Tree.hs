@@ -53,7 +53,7 @@ data RemoveResult m a =
   | Hole (Tree m a)
 
 instance MonoidalTree Tree where
-  toTree = foldl (|>) Empty
+  toTree = foldr (<|) Empty
   
   x <| t = case insertL x t of
     Done t' -> t'
